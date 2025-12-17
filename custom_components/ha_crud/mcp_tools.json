@@ -13,7 +13,7 @@
       "name": "ha_list_dashboards",
       "description": "List all Lovelace dashboards in Home Assistant. Returns an array of dashboard metadata including id, url_path, title, icon, mode (storage/yaml), and visibility settings.",
       "method": "GET",
-      "path": "/api/config/dashboards",
+      "path": "/api/ha_crud/dashboards",
       "inputSchema": {
         "type": "object",
         "properties": {},
@@ -56,7 +56,7 @@
       "name": "ha_create_dashboard",
       "description": "Create a new Lovelace dashboard. Requires admin privileges. The url_path must contain a hyphen (e.g., 'my-dashboard').",
       "method": "POST",
-      "path": "/api/config/dashboards",
+      "path": "/api/ha_crud/dashboards",
       "inputSchema": {
         "type": "object",
         "properties": {

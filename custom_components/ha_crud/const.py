@@ -24,12 +24,12 @@ AVAILABLE_RESOURCES = [
 # Default enabled resources
 DEFAULT_RESOURCES = [RESOURCE_DASHBOARDS]
 
-# API Base paths
-API_BASE_PATH_DASHBOARDS = "/api/config/dashboards"
-API_BASE_PATH_AUTOMATIONS = "/api/config/automations"
-API_BASE_PATH_SCENES = "/api/config/scenes"
-API_BASE_PATH_SCRIPTS = "/api/config/scripts"
-API_BASE_PATH_HELPERS = "/api/config/helpers"
+# API Base paths - using /api/ha_crud/ to avoid conflicts with HA built-in /api/config/
+API_BASE_PATH_DASHBOARDS = "/api/ha_crud/dashboards"
+API_BASE_PATH_AUTOMATIONS = "/api/ha_crud/automations"
+API_BASE_PATH_SCENES = "/api/ha_crud/scenes"
+API_BASE_PATH_SCRIPTS = "/api/ha_crud/scripts"
+API_BASE_PATH_HELPERS = "/api/ha_crud/helpers"
 
 # Lovelace data keys
 LOVELACE_DATA = "lovelace"

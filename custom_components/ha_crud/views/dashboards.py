@@ -40,9 +40,9 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_lovelace_data(hass: HomeAssistant) -> dict[str, Any]:
+def get_lovelace_data(hass: HomeAssistant):
     """Get lovelace data from hass.data."""
-    return hass.data.get(LOVELACE_DATA, {})
+    return hass.data.get(LOVELACE_DATA)
 
 
 def get_dashboards_collection(hass: HomeAssistant):
@@ -54,7 +54,7 @@ class DashboardListView(HomeAssistantView):
     """View to list all dashboards and create new ones."""
 
     url = API_BASE_PATH_DASHBOARDS
-    name = "api:config:dashboards"
+    name = "api:ha_crud:dashboards"
     requires_auth = True
 
     async def get(self, request: web.Request) -> web.Response:
@@ -70,9 +70,8 @@ class DashboardListView(HomeAssistantView):
             return self.json([])
 
         dashboards = []
-        dashboard_configs = lovelace_data.get("dashboards", {})
 
-        for url_path, config in dashboard_configs.items():
+        for url_path, config in lovelace_data.dashboards.items():
             try:
                 info = await config.async_get_info()
                 dashboard_data = {
@@ -144,7 +143,7 @@ class DashboardListView(HomeAssistantView):
 
         url_path = validated_data[CONF_URL_PATH]
         lovelace_data = get_lovelace_data(hass)
-        dashboard_configs = lovelace_data.get("dashboards", {})
+        dashboard_configs = lovelace_data.dashboards
 
         # Check if dashboard already exists
         if url_path in dashboard_configs:
@@ -197,7 +196,7 @@ class DashboardDetailView(HomeAssistantView):
     """View for single dashboard operations."""
 
     url = API_BASE_PATH_DASHBOARDS + "/{dashboard_id}"
-    name = "api:config:dashboard"
+    name = "api:ha_crud:dashboard"
     requires_auth = True
 
     async def get(
@@ -224,7 +223,7 @@ class DashboardDetailView(HomeAssistantView):
 
         # Handle default dashboard
         url_path = None if dashboard_id == "lovelace" else dashboard_id
-        dashboard_configs = lovelace_data.get("dashboards", {})
+        dashboard_configs = lovelace_data.dashboards
 
         config = dashboard_configs.get(url_path)
         if config is None:
@@ -290,7 +289,7 @@ class DashboardDetailView(HomeAssistantView):
 
         lovelace_data = get_lovelace_data(hass)
         url_path = None if dashboard_id == "lovelace" else dashboard_id
-        dashboard_configs = lovelace_data.get("dashboards", {})
+        dashboard_configs = lovelace_data.dashboards
 
         config = dashboard_configs.get(url_path)
         if config is None:
@@ -385,7 +384,7 @@ class DashboardDetailView(HomeAssistantView):
 
         lovelace_data = get_lovelace_data(hass)
         url_path = None if dashboard_id == "lovelace" else dashboard_id
-        dashboard_configs = lovelace_data.get("dashboards", {})
+        dashboard_configs = lovelace_data.dashboards
 
         config = dashboard_configs.get(url_path)
         if config is None:
@@ -492,7 +491,7 @@ class DashboardDetailView(HomeAssistantView):
 
         lovelace_data = get_lovelace_data(hass)
         url_path = dashboard_id
-        dashboard_configs = lovelace_data.get("dashboards", {})
+        dashboard_configs = lovelace_data.dashboards
 
         config = dashboard_configs.get(url_path)
         if config is None:
@@ -534,7 +533,7 @@ class DashboardConfigView(HomeAssistantView):
     """View for dashboard configuration (views/cards) operations."""
 
     url = API_BASE_PATH_DASHBOARDS + "/{dashboard_id}/config"
-    name = "api:config:dashboard:config"
+    name = "api:ha_crud:dashboard:config"
     requires_auth = True
 
     async def get(
@@ -560,7 +559,7 @@ class DashboardConfigView(HomeAssistantView):
             )
 
         url_path = None if dashboard_id == "lovelace" else dashboard_id
-        dashboard_configs = lovelace_data.get("dashboards", {})
+        dashboard_configs = lovelace_data.dashboards
 
         config = dashboard_configs.get(url_path)
         if config is None:
@@ -615,7 +614,7 @@ class DashboardConfigView(HomeAssistantView):
 
         lovelace_data = get_lovelace_data(hass)
         url_path = None if dashboard_id == "lovelace" else dashboard_id
-        dashboard_configs = lovelace_data.get("dashboards", {})
+        dashboard_configs = lovelace_data.dashboards
 
         dashboard = dashboard_configs.get(url_path)
         if dashboard is None:

@@ -30,7 +30,7 @@ cp -r custom_components/ha_crud /path/to/homeassistant/config/custom_components/
 
 3. Verify installation by checking the logs for:
    ```
-   HA CRUD REST API registered. Dashboard endpoints available at /api/config/dashboards
+   HA CRUD REST API registered. Dashboard endpoints available at /api/ha_crud/dashboards
    ```
 
 ## Configuration
@@ -55,7 +55,7 @@ Include the token in the `Authorization` header:
 
 ```bash
 curl -H "Authorization: Bearer YOUR_TOKEN_HERE" \
-  http://homeassistant.local:8123/api/config/dashboards
+  http://homeassistant.local:8123/api/ha_crud/dashboards
 ```
 
 ## API Reference
@@ -63,7 +63,7 @@ curl -H "Authorization: Bearer YOUR_TOKEN_HERE" \
 ### Base URL
 
 ```
-http://homeassistant.local:8123/api/config/dashboards
+http://homeassistant.local:8123/api/ha_crud/dashboards
 ```
 
 ### Endpoints
@@ -83,7 +83,7 @@ http://homeassistant.local:8123/api/config/dashboards
 
 ```bash
 curl -H "Authorization: Bearer TOKEN" \
-  http://homeassistant.local:8123/api/config/dashboards
+  http://homeassistant.local:8123/api/ha_crud/dashboards
 ```
 
 **Response:**
@@ -114,7 +114,7 @@ curl -H "Authorization: Bearer TOKEN" \
 
 ```bash
 curl -H "Authorization: Bearer TOKEN" \
-  http://homeassistant.local:8123/api/config/dashboards/my-dashboard
+  http://homeassistant.local:8123/api/ha_crud/dashboards/my-dashboard
 ```
 
 Use `lovelace` as the ID for the default dashboard.
@@ -123,7 +123,7 @@ Use `lovelace` as the ID for the default dashboard.
 
 ```bash
 curl -H "Authorization: Bearer TOKEN" \
-  http://homeassistant.local:8123/api/config/dashboards/my-dashboard/config
+  http://homeassistant.local:8123/api/ha_crud/dashboards/my-dashboard/config
 ```
 
 **Response:**
@@ -157,7 +157,7 @@ curl -X POST \
     "show_in_sidebar": true,
     "require_admin": false
   }' \
-  http://homeassistant.local:8123/api/config/dashboards
+  http://homeassistant.local:8123/api/ha_crud/dashboards
 ```
 
 **Note:** The `url_path` must contain a hyphen (Home Assistant requirement).
@@ -195,7 +195,7 @@ curl -X PUT \
       }
     ]
   }' \
-  http://homeassistant.local:8123/api/config/dashboards/my-new-dashboard/config
+  http://homeassistant.local:8123/api/ha_crud/dashboards/my-new-dashboard/config
 ```
 
 ### Update Dashboard Metadata (Full)
@@ -210,7 +210,7 @@ curl -X PUT \
     "show_in_sidebar": true,
     "require_admin": false
   }' \
-  http://homeassistant.local:8123/api/config/dashboards/my-dashboard
+  http://homeassistant.local:8123/api/ha_crud/dashboards/my-dashboard
 ```
 
 ### Update Dashboard Metadata (Partial)
@@ -220,7 +220,7 @@ curl -X PATCH \
   -H "Authorization: Bearer TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"title": "New Title"}' \
-  http://homeassistant.local:8123/api/config/dashboards/my-dashboard
+  http://homeassistant.local:8123/api/ha_crud/dashboards/my-dashboard
 ```
 
 ### Delete a Dashboard
@@ -228,7 +228,7 @@ curl -X PATCH \
 ```bash
 curl -X DELETE \
   -H "Authorization: Bearer TOKEN" \
-  http://homeassistant.local:8123/api/config/dashboards/my-dashboard
+  http://homeassistant.local:8123/api/ha_crud/dashboards/my-dashboard
 ```
 
 **Response:** `204 No Content`
