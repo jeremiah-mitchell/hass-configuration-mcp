@@ -11,14 +11,33 @@ from typing import Any
 from homeassistant.core import HomeAssistant
 
 from ..const import (
+    CONF_DASHBOARDS_VALIDATE,
     DATA_DASHBOARDS_COLLECTION,
+    DEFAULT_OPTIONS,
+    DOMAIN,
     LOVELACE_DATA,
     MODE_STORAGE,
     MODE_YAML,
+    VALIDATE_NONE,
+    VALIDATE_STRICT,
+    VALIDATE_WARN,
 )
 from ..mcp_registry import mcp_tool
+from ..validation import validate_dashboard_entities
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _get_config_options(hass: HomeAssistant) -> dict[str, Any]:
+    """Get the current configuration options for config_mcp."""
+    options = DEFAULT_OPTIONS.copy()
+    if DOMAIN in hass.data:
+        for entry_id in hass.data[DOMAIN]:
+            for entry in hass.config_entries.async_entries(DOMAIN):
+                if entry.entry_id == entry_id:
+                    options.update(entry.options)
+                    break
+    return options
 
 
 # =============================================================================
@@ -244,7 +263,8 @@ async def create_dashboard(hass: HomeAssistant, arguments: dict[str, Any]) -> di
     name="ha_update_dashboard_config",
     description=(
         "Replace the full configuration (views, cards) of a dashboard. "
-        "This is how you upload dashboard JSON content. Requires admin privileges."
+        "This is how you upload dashboard JSON content. Requires admin privileges. "
+        "Entity validation mode can be overridden with the 'validate' parameter."
     ),
     schema={
         "type": "object",
@@ -256,6 +276,11 @@ async def create_dashboard(hass: HomeAssistant, arguments: dict[str, Any]) -> di
             "config": {
                 "type": "object",
                 "description": "Dashboard configuration object containing views array and optional settings",
+            },
+            "validate": {
+                "type": "string",
+                "enum": ["none", "warn", "strict"],
+                "description": "Override entity validation mode. 'none' = skip validation, 'warn' = accept but return warnings, 'strict' = reject if entities missing. If not specified, uses global config setting.",
             },
         },
         "required": ["dashboard_id", "config"],
@@ -281,8 +306,31 @@ async def update_dashboard_config(hass: HomeAssistant, arguments: dict[str, Any]
     if info.get("mode") == MODE_YAML:
         raise ValueError(f"Dashboard '{dashboard_id}' is YAML-based and read-only")
 
+    # Get validation mode from config, allow argument override
+    options = _get_config_options(hass)
+    default_validate_mode = options.get(CONF_DASHBOARDS_VALIDATE, VALIDATE_WARN)
+    validate_mode = arguments.get("validate", default_validate_mode)
+
+    # Validate entities if enabled
+    missing_entities: list[str] = []
+    if validate_mode != VALIDATE_NONE:
+        missing_entities = validate_dashboard_entities(hass, config)
+
+        # In strict mode, reject if any entities are missing
+        if validate_mode == VALIDATE_STRICT and missing_entities:
+            raise ValueError(
+                f"Dashboard references {len(missing_entities)} missing entities: "
+                f"{', '.join(missing_entities[:5])}{'...' if len(missing_entities) > 5 else ''}"
+            )
+
     await dashboard.async_save(config)
-    return config
+
+    # Build response with optional warnings
+    result = dict(config)
+    if validate_mode == VALIDATE_WARN and missing_entities:
+        result["warnings"] = {"missing_entities": missing_entities}
+
+    return result
 
 
 @mcp_tool(

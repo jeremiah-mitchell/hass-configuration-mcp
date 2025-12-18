@@ -55,13 +55,15 @@
           "dashboards_read": "Read",
           "dashboards_create": "Create",
           "dashboards_update": "Update",
-          "dashboards_delete": "Delete"
+          "dashboards_delete": "Delete",
+          "dashboards_validate": "Entity Validation"
         },
         "data_description": {
           "dashboards_read": "List dashboards, get metadata and configuration",
           "dashboards_create": "Create new dashboards",
           "dashboards_update": "Update dashboard metadata and configuration",
-          "dashboards_delete": "Delete dashboards (cannot delete default or YAML dashboards)"
+          "dashboards_delete": "Delete dashboards (cannot delete default or YAML dashboards)",
+          "dashboards_validate": "Validate that entities in dashboard configs exist. 'none' = skip, 'warn' = accept but return warnings, 'strict' = reject if missing"
         }
       },
       "mcp_server": {

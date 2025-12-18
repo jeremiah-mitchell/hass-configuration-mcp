@@ -20,6 +20,7 @@ from ..const import (
     ERR_DOMAIN_NOT_FOUND,
     ERR_ENTITY_NOT_FOUND,
 )
+from ..validation import find_entity_usage
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -448,3 +449,27 @@ class DomainEntitiesView(HomeAssistantView):
         entities.sort(key=lambda x: x["entity_id"])
 
         return self.json(entities)
+
+
+class EntityUsageView(HomeAssistantView):
+    """View to find where an entity is used across resources."""
+
+    url = API_BASE_PATH_ENTITIES + "/{entity_id}/usage"
+    name = "api:config_mcp:entity:usage"
+    requires_auth = True
+
+    async def get(self, request: web.Request, entity_id: str) -> web.Response:
+        """Handle GET request - find where an entity is used.
+
+        Path params:
+            entity_id: The entity ID to search for (e.g., 'light.living_room')
+
+        Returns:
+            200: Usage info with references in dashboards, automations, scripts, scenes
+        """
+        hass: HomeAssistant = request.app["hass"]
+
+        # Find usage across all resources
+        usage_data = await find_entity_usage(hass, entity_id)
+
+        return self.json(usage_data)

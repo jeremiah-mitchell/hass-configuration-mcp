@@ -17,6 +17,7 @@ from homeassistant.helpers import (
 )
 
 from ..mcp_registry import mcp_tool
+from ..validation import find_entity_usage
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -306,3 +307,29 @@ async def list_domain_entities(hass: HomeAssistant, arguments: dict[str, Any]) -
 
     entities.sort(key=lambda x: x["entity_id"])
     return entities
+
+
+@mcp_tool(
+    name="ha_get_entity_usage",
+    description=(
+        "Find where an entity is used across Home Assistant resources. "
+        "Searches dashboards, automations, scripts, and scenes to identify all "
+        "references to the specified entity. Useful for impact analysis before "
+        "modifying or removing an entity."
+    ),
+    schema={
+        "type": "object",
+        "properties": {
+            "entity_id": {
+                "type": "string",
+                "description": "The entity ID to search for (e.g., 'light.living_room', 'sensor.temperature')",
+            }
+        },
+        "required": ["entity_id"],
+    },
+    permission="discovery_entities",
+)
+async def get_entity_usage(hass: HomeAssistant, arguments: dict[str, Any]) -> dict[str, Any]:
+    """Find where an entity is used across all resources."""
+    entity_id = arguments["entity_id"]
+    return await find_entity_usage(hass, entity_id)

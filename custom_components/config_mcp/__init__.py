@@ -71,6 +71,7 @@ from .views import (
     DomainServiceListView,
     EntityDetailView,
     EntityListView,
+    EntityUsageView,
     FloorDetailView,
     FloorListView,
     IntegrationDetailView,
@@ -202,6 +203,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if dashboards_enabled:
         await _setup_dashboards_collection(hass)
 
+    # Pre-register MCP tools in executor to avoid blocking event loop
+    # This must happen before _register_views so tools are ready when MCP server starts
+    if options.get(CONF_MCP_SERVER):
+        from .tools import register_all_tools
+        tool_count = await hass.async_add_executor_job(register_all_tools)
+        _LOGGER.info("Pre-registered %d MCP tools at startup", tool_count)
+
     # Register views for enabled resources
     _register_views(hass, options)
 
@@ -285,6 +293,7 @@ def _register_views(hass: HomeAssistant, options: dict[str, Any]) -> None:
         hass.http.register_view(EntityDetailView())
         hass.http.register_view(DomainListView())
         hass.http.register_view(DomainEntitiesView())
+        hass.http.register_view(EntityUsageView())
         _REGISTERED_VIEWS.add(RESOURCE_ENTITIES)
         _LOGGER.info("Registered entity discovery API endpoints at /api/config_mcp/entities")
 

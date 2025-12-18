@@ -15,6 +15,12 @@ CONF_DASHBOARDS_READ = "dashboards_read"
 CONF_DASHBOARDS_CREATE = "dashboards_create"
 CONF_DASHBOARDS_UPDATE = "dashboards_update"
 CONF_DASHBOARDS_DELETE = "dashboards_delete"
+CONF_DASHBOARDS_VALIDATE = "dashboards_validate"
+
+# Dashboard validation modes
+VALIDATE_NONE = "none"
+VALIDATE_WARN = "warn"
+VALIDATE_STRICT = "strict"
 
 # Automations
 CONF_AUTOMATIONS_READ = "automations_read"
@@ -100,6 +106,7 @@ DEFAULT_OPTIONS = {
     CONF_DASHBOARDS_CREATE: False,
     CONF_DASHBOARDS_UPDATE: True,
     CONF_DASHBOARDS_DELETE: False,
+    CONF_DASHBOARDS_VALIDATE: VALIDATE_WARN,
     # Automations - disabled by default for safety
     CONF_AUTOMATIONS_READ: False,
     CONF_AUTOMATIONS_CREATE: False,
@@ -163,6 +170,7 @@ ERR_DASHBOARD_EXISTS = "dashboard_already_exists"
 ERR_INVALID_CONFIG = "invalid_config"
 ERR_YAML_DASHBOARD = "yaml_dashboard_readonly"
 ERR_DEFAULT_DASHBOARD = "default_dashboard_protected"
+ERR_INVALID_ENTITIES = "invalid_entities"
 
 # Error codes - Discovery
 ERR_ENTITY_NOT_FOUND = "entity_not_found"
@@ -197,4 +205,4 @@ DATA_AUTOMATIONS_COMPONENT = f"{DOMAIN}_automations_component"
 # MCP Server configuration
 API_BASE_PATH_MCP = "/api/config_mcp/mcp"
 MCP_SERVER_NAME = "config-mcp"
-MCP_SERVER_VERSION = "1.0.0"
+MCP_SERVER_VERSION = "1.1.0"

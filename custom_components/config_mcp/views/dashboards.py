@@ -18,6 +18,7 @@ from ..const import (
     CONF_DASHBOARDS_DELETE,
     CONF_DASHBOARDS_READ,
     CONF_DASHBOARDS_UPDATE,
+    CONF_DASHBOARDS_VALIDATE,
     CONF_ICON,
     CONF_REQUIRE_ADMIN,
     CONF_SHOW_IN_SIDEBAR,
@@ -29,14 +30,19 @@ from ..const import (
     ERR_DASHBOARD_EXISTS,
     ERR_DASHBOARD_NOT_FOUND,
     ERR_INVALID_CONFIG,
+    ERR_INVALID_ENTITIES,
     ERR_YAML_DASHBOARD,
     LOVELACE_DATA,
     MODE_STORAGE,
     MODE_YAML,
+    VALIDATE_NONE,
+    VALIDATE_STRICT,
+    VALIDATE_WARN,
 )
 from ..validation import (
     validate_create_data,
     validate_dashboard_config,
+    validate_dashboard_entities,
     validate_patch_data,
     validate_update_data,
 )
@@ -901,9 +907,35 @@ class DashboardConfigView(HomeAssistantView):
                 ERR_INVALID_CONFIG,
             )
 
+        # Get validation mode from config, allow query param override
+        options = get_config_options(hass)
+        default_validate_mode = options.get(CONF_DASHBOARDS_VALIDATE, VALIDATE_WARN)
+        validate_mode = request.query.get("validate", default_validate_mode)
+
+        # Validate entities if enabled
+        missing_entities: list[str] = []
+        if validate_mode != VALIDATE_NONE:
+            missing_entities = validate_dashboard_entities(hass, validated_config)
+
+            # In strict mode, reject if any entities are missing
+            if validate_mode == VALIDATE_STRICT and missing_entities:
+                return self.json_message(
+                    f"Dashboard references {len(missing_entities)} missing entities: {', '.join(missing_entities[:5])}{'...' if len(missing_entities) > 5 else ''}",
+                    HTTPStatus.BAD_REQUEST,
+                    ERR_INVALID_ENTITIES,
+                )
+
         try:
             await dashboard.async_save(validated_config)
-            return self.json(validated_config)
+
+            # Build response with optional warnings
+            response_data = dict(validated_config)
+            if validate_mode == VALIDATE_WARN and missing_entities:
+                response_data["warnings"] = {
+                    "missing_entities": missing_entities
+                }
+
+            return self.json(response_data)
         except Exception as err:
             _LOGGER.exception("Error saving dashboard config: %s", err)
             return self.json_message(

@@ -20,6 +20,7 @@ from .const import (
     CONF_DASHBOARDS_DELETE,
     CONF_DASHBOARDS_READ,
     CONF_DASHBOARDS_UPDATE,
+    CONF_DASHBOARDS_VALIDATE,
     CONF_DASHBOARDS_WRITE,
     CONF_DISCOVERY_AREAS,
     CONF_DISCOVERY_DEVICES,
@@ -43,6 +44,9 @@ from .const import (
     DEFAULT_OPTIONS,
     DOMAIN,
     RESOURCE_DASHBOARDS,
+    VALIDATE_NONE,
+    VALIDATE_STRICT,
+    VALIDATE_WARN,
 )
 
 
@@ -229,6 +233,10 @@ class HaCrudOptionsFlow(OptionsFlow):
                         CONF_DASHBOARDS_DELETE,
                         default=self._options.get(CONF_DASHBOARDS_DELETE, False),
                     ): bool,
+                    vol.Required(
+                        CONF_DASHBOARDS_VALIDATE,
+                        default=self._options.get(CONF_DASHBOARDS_VALIDATE, VALIDATE_WARN),
+                    ): vol.In([VALIDATE_NONE, VALIDATE_WARN, VALIDATE_STRICT]),
                 }
             ),
         )

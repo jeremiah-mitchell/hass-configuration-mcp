@@ -25,6 +25,7 @@ from .entities import (
     DomainListView,
     EntityDetailView,
     EntityListView,
+    EntityUsageView,
 )
 from .integrations import (
     IntegrationDetailView,
@@ -75,6 +76,7 @@ __all__ = [
     # Entity views
     "EntityListView",
     "EntityDetailView",
+    "EntityUsageView",
     "DomainListView",
     "DomainEntitiesView",
     # Device views

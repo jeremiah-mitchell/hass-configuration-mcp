@@ -157,17 +157,29 @@ async def _get_log_entries(
         if SYSTEM_LOG_DOMAIN in hass.data:
             system_log = hass.data[SYSTEM_LOG_DOMAIN]
 
-            # The system_log stores entries in a deque
+            # The system_log handler stores entries in a DedupStore (OrderedDict)
+            # Access via .records.to_list() or .records.values()
             if hasattr(system_log, "records"):
-                records = list(system_log.records)
+                store = system_log.records
+                if hasattr(store, "to_list"):
+                    # to_list() returns dicts, but we need the values for filtering
+                    records = list(store.values())
+                elif hasattr(store, "values"):
+                    records = list(store.values())
+                else:
+                    records = list(store)
             elif isinstance(system_log, Mapping) and "records" in system_log:
-                records = list(system_log["records"])
+                records = list(system_log["records"].values() if hasattr(system_log["records"], "values") else system_log["records"])
             else:
                 # Try to get from the handler directly
                 records = []
                 for handler in logging.root.handlers:
                     if hasattr(handler, "records"):
-                        records = list(handler.records)
+                        store = handler.records
+                        if hasattr(store, "values"):
+                            records = list(store.values())
+                        else:
+                            records = list(store)
                         break
 
             # Level mapping
@@ -183,36 +195,68 @@ async def _get_log_entries(
                 if len(entries) >= limit:
                     break
 
+                # Handle different record types:
+                # - logging.LogRecord: has levelno (int), levelname, getMessage(), created, exc_info
+                # - HA LogEntry: has level (str), name, message (deque), timestamp, exception
+                if hasattr(record, "levelno"):
+                    # logging.LogRecord format
+                    level_no = record.levelno
+                    level_name = record.levelname
+                    source = record.name
+                    message = record.getMessage()
+                    timestamp = datetime.fromtimestamp(record.created)
+                    exc_text = None
+                    if record.exc_info:
+                        import traceback
+                        exc_text = "".join(traceback.format_exception(*record.exc_info))
+                elif hasattr(record, "level") and hasattr(record, "message"):
+                    # Home Assistant LogEntry format (from system_log)
+                    level_name = record.level
+                    level_no = level_map.get(level_name.lower(), 0)
+                    source = record.name
+                    # message is a deque of strings, join them
+                    if hasattr(record.message, "__iter__") and not isinstance(record.message, str):
+                        message = " | ".join(str(m) for m in record.message)
+                    else:
+                        message = str(record.message)
+                    # timestamp may be a float (unix timestamp) or datetime
+                    raw_ts = record.timestamp if hasattr(record, "timestamp") else None
+                    if isinstance(raw_ts, (int, float)):
+                        timestamp = datetime.fromtimestamp(raw_ts)
+                    elif isinstance(raw_ts, datetime):
+                        timestamp = raw_ts
+                    else:
+                        timestamp = datetime.now()
+                    exc_text = record.exception if hasattr(record, "exception") else None
+                else:
+                    # Unknown format, skip
+                    continue
+
                 # Apply filters
-                if errors_only and record.levelno < logging.WARNING:
+                if errors_only and level_no < logging.WARNING:
                     continue
 
                 if level_filter:
                     target_level = level_map.get(level_filter.lower())
-                    if target_level and record.levelno != target_level:
+                    if target_level and level_no != target_level:
                         continue
 
-                if source_filter and source_filter not in record.name.lower():
+                if source_filter and source_filter not in source.lower():
                     continue
 
-                # Get timestamp
-                timestamp = datetime.fromtimestamp(record.created)
                 if since and timestamp < since:
                     continue
 
                 entry = {
                     "timestamp": timestamp.isoformat(),
-                    "level": record.levelname,
-                    "source": record.name,
-                    "message": record.getMessage(),
+                    "level": level_name,
+                    "source": source,
+                    "message": message,
                 }
 
                 # Add exception info if present
-                if record.exc_info:
-                    import traceback
-                    entry["exception"] = "".join(
-                        traceback.format_exception(*record.exc_info)
-                    )
+                if exc_text:
+                    entry["exception"] = exc_text
 
                 entries.append(entry)
 

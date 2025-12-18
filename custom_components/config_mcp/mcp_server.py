@@ -71,16 +71,26 @@ def create_mcp_server(hass: HomeAssistant) -> Server:
     This version uses the tool registry - tools self-register using the
     @mcp_tool decorator in the tools/ package.
 
+    Note: Tools are pre-registered at component startup (in async_setup_entry)
+    to avoid blocking the event loop. This function just uses them.
+
     Args:
         hass: Home Assistant instance
 
     Returns:
         Configured MCP Server instance
     """
-    # Import all tool modules to trigger @mcp_tool registration
-    from .tools import register_all_tools
-    tool_count = register_all_tools()
-    _LOGGER.info("MCP server initialized with %d tools", tool_count)
+    from .mcp_registry import tool_count as get_tool_count
+
+    # Tools should already be registered at startup, just log the count
+    current_count = get_tool_count()
+    if current_count == 0:
+        # Fallback: if tools weren't pre-registered, do it now (will trigger warning)
+        _LOGGER.warning("MCP tools were not pre-registered, registering now (may block)")
+        from .tools import register_all_tools
+        current_count = register_all_tools()
+
+    _LOGGER.debug("MCP server using %d registered tools", current_count)
 
     server = Server(MCP_SERVER_NAME)
 
