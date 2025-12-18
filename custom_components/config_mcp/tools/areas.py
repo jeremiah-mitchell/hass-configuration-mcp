@@ -169,7 +169,7 @@ async def list_floors(hass: HomeAssistant, arguments: dict[str, Any]) -> list[di
             floor_area_counts[area.floor_id] = floor_area_counts.get(area.floor_id, 0) + 1
 
     floors = []
-    for floor in floor_registry.async_get_floors():
+    for floor in floor_registry.async_list_floors():
         floors.append({
             "id": floor.floor_id,
             "name": floor.name,
